@@ -26,7 +26,10 @@ def main():
         req=urllib.request.Request('https://api.github.com/gists/'+os.environ['GIST_ID'],headers={'User-Agent':'heartbeat-watchdog','Authorization':'Bearer '+os.environ['GH_TOKEN']})
         with urllib.request.urlopen(req,timeout=20) as r: gist=json.load(r)
         h=json.loads(gist['files']['heartbeat.json']['content'])
-    except Exception: h=None
+        print('Heartbeat fetched and parsed')
+    except Exception:
+        print('Heartbeat fetch failed')
+        h=None
     p=Path('.state/status.json'); state=json.loads(p.read_text()) if p.exists() else {}
     next_state,msg=transition(state,decide(h,now),now)
     if msg:
