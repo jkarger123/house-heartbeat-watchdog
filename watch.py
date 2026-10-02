@@ -23,7 +23,7 @@ def transition(state,reasons,now):
 def main():
     now=time.time()
     try:
-        req=urllib.request.Request('https://api.github.com/gists/'+os.environ['GIST_ID'],headers={'User-Agent':'heartbeat-watchdog','Authorization':'Bearer '+os.environ['GH_TOKEN']})
+        req=urllib.request.Request('https://api.github.com/gists/'+os.environ['GIST_ID'],headers={'User-Agent':'heartbeat-watchdog'})
         with urllib.request.urlopen(req,timeout=20) as r: gist=json.load(r)
         h=json.loads(gist['files']['heartbeat.json']['content'])
         print('Heartbeat fetched and parsed')
