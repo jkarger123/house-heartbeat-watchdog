@@ -1,0 +1,39 @@
+name: Heartbeat watchdog
+on:
+  schedule:
+    - cron: '2-57/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: heartbeat-watchdog
+  cancel-in-progress: false
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with:
+          path: .state
+          key: watch-state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: watch-state-
+      - run: python3 watch.py
+        env:
+          GIST_ID: ${{ secrets.GIST_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/cache/save@v4
+        with:
+          path: .state
+          key: watch-state-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Monthly activity
+        run: |
+          month=$(date -u +%Y-%m)
+          if [ "$(cat .keepalive 2>/dev/null)" != "$month" ]; then
+            echo "$month" > .keepalive
+            git add .keepalive
+            git -c user.name=heartbeat-watchdog -c user.email=heartbeat-watchdog@users.noreply.github.com commit -m 'Monthly watchdog keepalive'
+            git push
+          fi
